@@ -5,14 +5,24 @@ import folium
 import itertools
 
 df_datafiniti = pd.read_csv("./data/Datafiniti_Pizza_Restaurants_and_the_Pizza_They_Sell_May19.csv")
-#st.dataframe(df_datafiniti)
+df_datafiniti = df_datafiniti.filter(items=['name', 'province', 'city', 'address', 'latitude', 'longitude', 'postalCode', 'menus.name'])
+df_datafiniti = df_datafiniti.drop_duplicates()
 
-st.markdown("### Here, we look at the datafiniti dataset, where location is included.")
+st.markdown("### Pizza Locations")
 
-m = folium.Map(location = [df_datafiniti.latitude.mean(), df_datafiniti.longitude.mean()], zoom_start = 3, control_scale = True)
+selections = st.multiselect("Choose State(s)", df_datafiniti.province.unique())
+if len(selections) == 0:
+    selections = ['AL']
+
+df_by_state = df_datafiniti[df_datafiniti['province'].isin(selections)]
+
+st.dataframe(df_by_state)
+
+
+m = folium.Map(location = [df_by_state.latitude.mean(), df_by_state.longitude.mean()], zoom_start = 3, control_scale = True)
 
 # Loop through each row in the dataframe
-for i, row in df_datafiniti.iterrows():
+for i, row in df_by_state.iterrows():
     # setup the content of the popup
     iframe = folium.IFrame('Item Name: ' + str(row["menus.name"]))
     
