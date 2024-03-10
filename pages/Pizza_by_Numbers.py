@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
-from  itertools import chain
+from itertools import chain
+import altair as alt
 
 def update_selection(selection):
     top_n = df2_ingredients.nlargest(n = int(selection), columns = ["count_of"])
@@ -28,13 +29,17 @@ df3_ingredients = df2_ingredients.sort_values(by = ["count_of"], ascending = Fal
 
 num_ingred = len(df2_ingredients['pizza_ingredients'].unique()) # number of ingredients
 
+
 #-----------------Actual streamlit page coding begins here----------------------
 st.set_page_config(page_title = "About The Data", layout = "wide")
 col1, col2 = st.columns(2)
 
+
 with col1:
-    st.markdown("This is what the **original data** looks like, as a simple dataframe (table).  We can start asking all kinds of questions about this data:")
-    st.dataframe(df_ingredients)
+    st.markdown('# Table of Ingredients')
+    st.markdown("### This is what the **original data** looks like, as a simple dataframe (table).  We can start asking all kinds of questions about this data:")
+    df_ingredients_items = df_ingredients.filter(items=['pizza_name', 'pizza_ingredients', 'pizza_category', 'unit_price', 'total_price'])
+    st.dataframe(df_ingredients_items)
     st.divider()
     st.markdown("### What if we wanted to know about the Top However-many Ingredients?")
     num_list = [item for item in range(1, (num_ingred+1))] # create a list from 1 to n of ingredients, this is done for a 'Top __' selection
@@ -46,7 +51,17 @@ with col1:
         plt.pie(top_n['count_of'], labels = top_n['pizza_ingredients'])
         st.pyplot(plt)
 with col2:
-    st.markdown("### What if we wanted to know if there were dates where orders peaked?")
-    st.markdown("# Dates of orders placed")
+    st.markdown("# Orders placed")
+
+    st.markdown("### What is the most profitable pizza?")
+
+    profit_pizza = df_ingredients.groupby(by=['pizza_name'])['total_price'].sum().reset_index()
+    profit_pizza = profit_pizza.sort_values(['total_price'], ascending=True)
+    st.bar_chart(profit_pizza, x='pizza_name', y='total_price', color='pizza_name')
+    st.dataframe(profit_pizza)
+
+    st.markdown("### What are the peak order dates?")
     df_ingredients['date_count'] = df_ingredients.order_date.map(df_ingredients.groupby('order_date').size())
     st.bar_chart(df_ingredients, x = 'order_date', y = 'date_count')
+
+
